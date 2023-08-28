@@ -37,12 +37,14 @@ import org.joda.time.DateTime;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
+import org.jooq.JSONFormat;
 import org.jooq.Record1;
 import org.jooq.Record5;
 import org.jooq.Result;
 import org.jooq.SelectConditionStep;
 import org.jooq.SelectQuery;
 import org.jooq.Table;
+import org.jooq.JSONFormat.RecordFormat;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -333,6 +335,23 @@ public class ChargePointRepositoryImpl implements ChargePointRepository {
             }
         });
     }
+
+    @Override
+    public String getChargeBoxAddresses() {
+        return ctx.select(
+                CHARGE_BOX.CHARGE_BOX_ID, 
+                CHARGE_BOX.LOCATION_LATITUDE, 
+                CHARGE_BOX.LOCATION_LONGITUDE
+            )
+            .from(CHARGE_BOX)
+            .fetch()
+            .formatJSON(
+                new JSONFormat()
+                    .header(false)
+                    .recordFormat(RecordFormat.OBJECT)
+            );
+    }
+
 
     // -------------------------------------------------------------------------
     // Helpers

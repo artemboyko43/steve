@@ -29,6 +29,7 @@ import de.rwth.idsg.steve.service.notification.OccpStationBooted;
 import de.rwth.idsg.steve.service.notification.OcppStationStatusFailure;
 import de.rwth.idsg.steve.service.notification.OcppTransactionEnded;
 import de.rwth.idsg.steve.service.notification.OcppTransactionStarted;
+import de.rwth.idsg.steve.web.dto.OcppTagForm;
 import jooq.steve.db.enums.TransactionStopEventActor;
 import lombok.extern.slf4j.Slf4j;
 import ocpp.cs._2015._10.AuthorizationStatus;
@@ -151,6 +152,28 @@ public class CentralSystemService16_Service {
     }
 
     public MeterValuesResponse meterValues(MeterValuesRequest parameters, String chargeBoxIdentity) {
+        // @todo add logic for stopping transaction.
+        // if occp tag alowwed Wh more than in meter stop transaction.
+        // if (parameters.getMeterValue())
+        int size = parameters.getMeterValue().size();
+        int sampledSize = parameters.getMeterValue().get(size - 1).getSampledValue().size();
+        int meterVal = Integer.parseInt(parameters.getMeterValue().get(size - 1).getSampledValue().get(sampledSize - 1).getValue());
+        
+        if (meterVal >= 20) {
+            stopTransaction(
+                new StopTransactionRequest()
+                    .withMeterStop(meterVal)
+                    .withTransactionId(parameters.getTransactionId())
+                    .withIdTag("test_tag"),
+                chargeBoxIdentity
+            );
+
+            var ocppTagForm = new OcppTagForm();
+            ocppTagForm.setIdTag("test_tag");
+            ocppTagForm.setNote("-20");
+            ocppTagService.updateOcppTag(ocppTagForm);
+        }
+
         ocppServerRepository.insertMeterValues(
                 chargeBoxIdentity,
                 parameters.getMeterValue(),

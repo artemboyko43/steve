@@ -36,6 +36,8 @@ public interface TransactionRepository {
 
     List<Integer> getActiveTransactionIds(String chargeBoxId);
 
+    List<Integer> getActiveTransactionByConnectorIds(String chargeBoxId, Integer connectorId);
+
     TransactionDetails getDetails(int transactionPk, boolean firstArrivingMeterValueIfMultiple);
 
     default TransactionDetails getDetails(int transactionPk) {

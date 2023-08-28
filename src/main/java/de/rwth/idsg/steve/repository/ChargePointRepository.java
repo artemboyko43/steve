@@ -46,6 +46,7 @@ public interface ChargePointRepository {
     }
 
     List<String> getChargeBoxIds();
+    String getChargeBoxAddresses();
     Map<String, Integer> getChargeBoxIdPkPair(List<String> chargeBoxIdList);
 
     List<ChargePoint.Overview> getOverview(ChargePointQueryForm form);
