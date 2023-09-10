@@ -18,20 +18,25 @@
  */
 package de.rwth.idsg.steve.web.api;
 
+import de.rwth.idsg.steve.ocpp.OcppTransport;
 import de.rwth.idsg.steve.repository.TransactionRepository;
+import de.rwth.idsg.steve.repository.dto.ChargePointSelect;
 import de.rwth.idsg.steve.service.CentralSystemService16_Service;
+import de.rwth.idsg.steve.service.ChargePointService16_Client;
 import de.rwth.idsg.steve.web.api.ApiControllerAdvice.ApiErrorResponse;
 import de.rwth.idsg.steve.web.dto.RemoteStartTransaction;
+import de.rwth.idsg.steve.web.dto.ocpp.RemoteStartTransactionParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ocpp.cs._2015._10.StartTransactionRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Sevket Goekay <sevketgokay@gmail.com>
@@ -45,7 +50,9 @@ public class TransactionStartRestController {
 
     private final TransactionRepository transactionRepository;
 
-    private final CentralSystemService16_Service centralSystemService16Service;
+//    private final CentralSystemService16_Service centralSystemService16Service;
+
+    private final ChargePointService16_Client chargePointService16Client;
 
     // @ApiResponses(value = {
     //     @ApiResponse(code = 200, message = "OK"),
@@ -88,22 +95,38 @@ public class TransactionStartRestController {
         );
 
         // Check if transaction already exist and active.
+        // @todo check balance by ocpp tag.
         if (activeTransactions.isEmpty()) {
 
-            // @todo unlock connector.
+            // @todo need to check do we need this "unlock connector".
             // centralSystemService16Service.
 
+            RemoteStartTransactionParams remoteStartTransactionParams = new RemoteStartTransactionParams();
+            remoteStartTransactionParams.setConnectorId(params.getConnectorId());
+            remoteStartTransactionParams.setIdTag(params.getIdTag());
+
+            List<ChargePointSelect> chargePointSelectList = new ArrayList<>();
+            ChargePointSelect chargePointSelectListItem = new ChargePointSelect(OcppTransport.fromValue("J"), params.getChargeBoxId());
+            chargePointSelectList.add(chargePointSelectListItem);
+
+            remoteStartTransactionParams.setChargePointSelectList(chargePointSelectList);
+
+            // Start transaction by charge point client.
+            chargePointService16Client.remoteStartTransaction(remoteStartTransactionParams);
+
             // Starting new transaction remote.
-            var response = centralSystemService16Service.startTransaction(
-                    new StartTransactionRequest()
-                            .withConnectorId(params.getConnectorId())
-                            .withIdTag(params.getIdTag()),
-                    params.getChargeBoxId()
-            );
+//            var response = centralSystemService16Service.startTransaction(
+//                    new StartTransactionRequest()
+//                            .withConnectorId(params.getConnectorId())
+//                            .withIdTag(params.getIdTag()),
+//                    params.getChargeBoxId()
+//            );
 
             // log.debug("Read response for query: {}", response);
             // Return new transaction id.
-            return response.getTransactionId();
+//            return response.getTransactionId();
+
+            return 1;
         }
         else {
             // Transaction already exist and active return zero.
