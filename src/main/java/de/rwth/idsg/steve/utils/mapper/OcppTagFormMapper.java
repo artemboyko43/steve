@@ -43,6 +43,7 @@ public final class OcppTagFormMapper {
         }
 
         form.setMaxActiveTransactionCount(record.getMaxActiveTransactionCount());
+        form.setBalance(record.getBalance());
         form.setNote(record.getNote());
 
         String parentIdTag = record.getParentIdTag();

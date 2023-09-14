@@ -36,6 +36,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
@@ -150,6 +151,14 @@ public class OcppTagService {
         ocppTagRepository.updateOcppTag(form);
     }
 
+    public double getBalance(String idTag) {
+        return ocppTagRepository.getBalance(idTag);
+    }
+
+    public void decreaseBalanceOcppTag(String idTag, float diffBalance) {
+        ocppTagRepository.decreaseBalanceOcppTag(idTag, diffBalance);
+    }
+
     public void deleteOcppTag(int ocppTagPk) {
         ocppTagRepository.deleteOcppTag(ocppTagPk);
     }
@@ -183,10 +192,10 @@ public class OcppTagService {
             return AuthorizationStatus.INVALID;
         }
 
-        if (isBlocked(record)) {
-            log.error("The user with idTag '{}' is BLOCKED.", idTag);
-            return AuthorizationStatus.BLOCKED;
-        }
+//        if (isBlocked(record)) {
+//            log.error("The user with idTag '{}' is BLOCKED.", idTag);
+//            return AuthorizationStatus.BLOCKED;
+//        }
 
         if (isExpired(record, DateTime.now())) {
             log.error("The user with idTag '{}' is EXPIRED.", idTag);

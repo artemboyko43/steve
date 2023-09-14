@@ -43,7 +43,9 @@ public final class OcppTag {
         private final String parentIdTag;
 
         private final boolean inTransaction;
-        private final boolean blocked;
+
+//        private final boolean blocked;
+        private final double balance;
 
         /**
          * Only relevant for the web pages. Disabled for API

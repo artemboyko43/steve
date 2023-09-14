@@ -106,9 +106,9 @@
                     </td>
                 </tr>
                 <tr>
-                    <td>Blocked?:</td>
-                    <td><form:select path="blocked">
-                        <form:options items="${blocked}" itemLabel="value"/>
+                    <td>Balance</td>
+                    <td><form:select path="balance">
+                        <form:options items="${balance}" itemLabel="value"/>
                     </form:select>
                     </td>
                 </tr>
@@ -128,7 +128,7 @@
                 <th data-sort="string">Parent ID Tag</th>
                 <th data-sort="date">Expiry Date/Time</th>
                 <th data-sort="string">In Transaction?</th>
-                <th data-sort="string">Blocked?</th>
+                <th data-sort="string">Balance Wh</th>
                 <th>
                     <form:form action="${ctxPath}/manager/ocppTags/add" method="get">
                         <input type="submit" class="blueSubmit" value="Add New"/>
@@ -147,7 +147,7 @@
                     </td>
                     <td data-sort-value="${item.expiryDate.millis}">${item.expiryDateFormatted}</td>
                     <td>${item.inTransaction}</td>
-                    <td>${item.blocked}</td>
+                    <td>${item.balance}</td>
                     <td>
                         <form:form action="${ctxPath}/manager/ocppTags/delete/${item.ocppTagPk}">
                             <input type="submit" class="redSubmit" value="Delete">

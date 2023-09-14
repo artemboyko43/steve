@@ -1,0 +1,2 @@
+ALTER TABLE `ocpp_tag`
+  MODIFY balance DECIMAL(12,2) NOT NULL;

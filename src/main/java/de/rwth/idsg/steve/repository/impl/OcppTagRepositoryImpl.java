@@ -31,7 +31,6 @@ import org.joda.time.DateTime;
 import org.jooq.DSLContext;
 import org.jooq.JoinType;
 import org.jooq.Record10;
-import org.jooq.Record7;
 import org.jooq.RecordMapper;
 import org.jooq.Result;
 import org.jooq.SelectQuery;
@@ -79,7 +78,7 @@ public class OcppTagRepositoryImpl implements OcppTagRepository {
                 OCPP_TAG_ACTIVITY.PARENT_ID_TAG,
                 OCPP_TAG_ACTIVITY.EXPIRY_DATE,
                 OCPP_TAG_ACTIVITY.IN_TRANSACTION,
-                OCPP_TAG_ACTIVITY.BLOCKED,
+                OCPP_TAG_ACTIVITY.BALANCE,
                 OCPP_TAG_ACTIVITY.MAX_ACTIVE_TRANSACTION_COUNT,
                 OCPP_TAG_ACTIVITY.ACTIVE_TRANSACTION_COUNT,
                 OCPP_TAG_ACTIVITY.NOTE
@@ -118,7 +117,7 @@ public class OcppTagRepositoryImpl implements OcppTagRepository {
         }
 
         processBooleanType(selectQuery, OCPP_TAG_ACTIVITY.IN_TRANSACTION, form.getInTransaction());
-        processBooleanType(selectQuery, OCPP_TAG_ACTIVITY.BLOCKED, form.getBlocked());
+//        processBooleanType(selectQuery, OCPP_TAG_ACTIVITY.BLOCKED, form.getBlocked());
 
         return selectQuery.fetch().map(new UserMapper());
     }
@@ -162,7 +161,7 @@ public class OcppTagRepositoryImpl implements OcppTagRepository {
         return ctx.select(OCPP_TAG_ACTIVITY.ID_TAG)
                   .from(OCPP_TAG_ACTIVITY)
                   .where(OCPP_TAG_ACTIVITY.IN_TRANSACTION.isFalse())
-                    .and(OCPP_TAG_ACTIVITY.BLOCKED.isFalse())
+//                    .and(OCPP_TAG_ACTIVITY.BLOCKED.isFalse())
                     .and(OCPP_TAG_ACTIVITY.EXPIRY_DATE.isNull().or(OCPP_TAG_ACTIVITY.EXPIRY_DATE.greaterThan(DateTime.now())))
                   .fetch(OCPP_TAG_ACTIVITY.ID_TAG);
     }
@@ -203,6 +202,7 @@ public class OcppTagRepositoryImpl implements OcppTagRepository {
                       .set(OCPP_TAG.EXPIRY_DATE, toDateTime(u.getExpiryDate()))
                       .set(OCPP_TAG.MAX_ACTIVE_TRANSACTION_COUNT, u.getMaxActiveTransactionCount())
                       .set(OCPP_TAG.NOTE, u.getNote())
+                      .set(OCPP_TAG.BALANCE, u.getBalance())
                       .returning(OCPP_TAG.OCPP_TAG_PK)
                       .fetchOne()
                       .getOcppTagPk();
@@ -224,10 +224,40 @@ public class OcppTagRepositoryImpl implements OcppTagRepository {
                .set(OCPP_TAG.EXPIRY_DATE, toDateTime(u.getExpiryDate()))
                .set(OCPP_TAG.MAX_ACTIVE_TRANSACTION_COUNT, u.getMaxActiveTransactionCount())
                .set(OCPP_TAG.NOTE, u.getNote())
-               .where(OCPP_TAG.OCPP_TAG_PK.equal(u.getOcppTagPk()))
+               .set(OCPP_TAG.BALANCE, u.getBalance())
+//               .where(OCPP_TAG.OCPP_TAG_PK.equal(u.getOcppTagPk()))
+               .where(OCPP_TAG.ID_TAG.equal(u.getIdTag()))
                .execute();
         } catch (DataAccessException e) {
             throw new SteveException("Execution of updateOcppTag for idTag '%s' FAILED.", u.getIdTag(), e);
+        }
+    }
+
+    @Override
+    public double getBalance(String idTag) {
+        try {
+//            return 0.1F;
+            return ctx.select(OCPP_TAG.BALANCE).from(OCPP_TAG).where(OCPP_TAG.ID_TAG.eq(idTag)).fetchOne().value1();
+        } catch (DataAccessException e) {
+            throw new SteveException("Execution of decreaseBalanceOcppTag for idTag '%s' FAILED.", idTag, e);
+        }
+    }
+
+//    @Override
+    public void decreaseBalanceOcppTag(String idTag, float diffBalance) {
+        try {
+            double balance = getBalance(idTag);
+
+            double newBalance = balance - diffBalance;
+
+            if (diffBalance < balance) {
+                ctx.update(OCPP_TAG)
+                    .set(OCPP_TAG.BALANCE, newBalance)
+                    .where(OCPP_TAG.ID_TAG.equal(idTag))
+                    .execute();
+            }
+        } catch (DataAccessException e) {
+            throw new SteveException("Execution of decreaseBalanceOcppTag for idTag '%s' FAILED.", idTag, e);
         }
     }
 
@@ -251,9 +281,9 @@ public class OcppTagRepositoryImpl implements OcppTagRepository {
     }
 
     private static class UserMapper
-            implements RecordMapper<Record10<Integer, Integer, String, String, DateTime, Boolean, Boolean, Integer, Long, String>, Overview> {
+            implements RecordMapper<Record10<Integer, Integer, String, String, DateTime, Boolean, Double, Integer, Long, String>, Overview> {
         @Override
-        public Overview map(Record10<Integer, Integer, String, String, DateTime, Boolean, Boolean, Integer, Long, String> r) {
+        public Overview map(Record10<Integer, Integer, String, String, DateTime, Boolean, Double, Integer, Long, String> r) {
             return Overview.builder()
                           .ocppTagPk(r.value1())
                           .parentOcppTagPk(r.value2())
@@ -262,7 +292,7 @@ public class OcppTagRepositoryImpl implements OcppTagRepository {
                           .expiryDate(r.value5())
                           .expiryDateFormatted(humanize(r.value5()))
                           .inTransaction(r.value6())
-                          .blocked(r.value7())
+                          .balance(r.value7())
                           .maxActiveTransactionCount(r.value8())
                           .activeTransactionCount(r.value9())
                           .note(r.value10())

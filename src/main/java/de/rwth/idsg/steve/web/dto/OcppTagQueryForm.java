@@ -50,8 +50,11 @@ public class OcppTagQueryForm {
     @ApiModelProperty(value = "Return in-transaction, not in-transaction, or all Ocpp tags? Defaults to ALL")
     private BooleanType inTransaction = BooleanType.ALL;
 
-    @ApiModelProperty(value = "Return blocked, not blocked, or all Ocpp tags? Defaults to ALL")
-    private BooleanType blocked = BooleanType.FALSE;
+//    @ApiModelProperty(value = "Return blocked, not blocked, or all Ocpp tags? Defaults to ALL")
+//    private BooleanType blocked = BooleanType.FALSE;
+
+    @ApiModelProperty(value = "Return balance in Kw")
+    private double balance;
 
     @ApiModelProperty(hidden = true)
     public boolean isOcppTagPkSet() {
@@ -76,9 +79,9 @@ public class OcppTagQueryForm {
         return Objects.requireNonNullElse(inTransaction, BooleanType.ALL);
     }
 
-    public BooleanType getBlocked() {
-        return Objects.requireNonNullElse(blocked, BooleanType.ALL);
-    }
+//    public BooleanType getBlocked() {
+//        return Objects.requireNonNullElse(blocked, BooleanType.ALL);
+//    }
 
     @RequiredArgsConstructor
     public enum BooleanType {
@@ -113,7 +116,7 @@ public class OcppTagQueryForm {
             super();
             setExpired(BooleanType.ALL);
             setInTransaction(BooleanType.ALL);
-            setBlocked(BooleanType.ALL);
+//            setBlocked(BooleanType.ALL);
         }
     }
 

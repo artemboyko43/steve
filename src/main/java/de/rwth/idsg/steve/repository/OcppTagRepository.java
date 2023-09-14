@@ -24,6 +24,7 @@ import de.rwth.idsg.steve.web.dto.OcppTagQueryForm;
 import jooq.steve.db.tables.records.OcppTagActivityRecord;
 import org.jooq.Result;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -49,4 +50,8 @@ public interface OcppTagRepository {
     int addOcppTag(OcppTagForm form);
     void updateOcppTag(OcppTagForm form);
     void deleteOcppTag(int ocppTagPk);
+
+    void decreaseBalanceOcppTag(String idTag, float diffBalance);
+
+    double getBalance(String idTag);
 }

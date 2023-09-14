@@ -60,6 +60,8 @@ public class OcppTagForm {
 
     private String note;
 
+    private double balance;
+
     /**
      * As specified in V0_9_9__update.sql default value is 1.
      */

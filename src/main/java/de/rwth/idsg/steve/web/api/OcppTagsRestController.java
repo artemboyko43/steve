@@ -19,6 +19,7 @@
 package de.rwth.idsg.steve.web.api;
 
 import de.rwth.idsg.steve.SteveException;
+import de.rwth.idsg.steve.repository.OcppTagRepository;
 import de.rwth.idsg.steve.repository.dto.OcppTag;
 import de.rwth.idsg.steve.service.OcppTagService;
 import de.rwth.idsg.steve.web.api.ApiControllerAdvice.ApiErrorResponse;
@@ -56,6 +57,8 @@ public class OcppTagsRestController {
 
     private final OcppTagService ocppTagService;
 
+    private final OcppTagRepository ocppTagRepository;
+
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "OK"),
         @ApiResponse(code = 400, message = "Bad Request", response = ApiErrorResponse.class),
@@ -79,12 +82,12 @@ public class OcppTagsRestController {
         @ApiResponse(code = 404, message = "Not Found", response = ApiErrorResponse.class),
         @ApiResponse(code = 500, message = "Internal Server Error", response = ApiErrorResponse.class)}
     )
-    @GetMapping("/{ocppTagPk}")
+    @GetMapping("/{ocppTagId}")
     @ResponseBody
-    public OcppTag.Overview getOne(@PathVariable("ocppTagPk") Integer ocppTagPk) {
-        log.debug("Read request for ocppTagPk: {}", ocppTagPk);
+    public OcppTag.Overview getOne(@PathVariable("ocppTagId") String ocppTagId) {
+        log.debug("Read request for ocppTagPk: {}", ocppTagId);
 
-        var response = getOneInternal(ocppTagPk);
+        var response = getOneInternal(ocppTagId);
         log.debug("Read response: {}", response);
         return response;
     }
@@ -103,9 +106,9 @@ public class OcppTagsRestController {
     public OcppTag.Overview create(@RequestBody @Valid OcppTagForm params) {
         log.debug("Create request: {}", params);
 
-        int ocppTagPk = ocppTagService.addOcppTag(params);
+//        int ocppTagPk = ocppTagService.addOcppTag(params);
 
-        var response = getOneInternal(ocppTagPk);
+        var response = getOneInternal(params.getIdTag());
         log.debug("Create response: {}", response);
         return response;
     }
@@ -117,15 +120,17 @@ public class OcppTagsRestController {
         @ApiResponse(code = 404, message = "Not Found", response = ApiErrorResponse.class),
         @ApiResponse(code = 500, message = "Internal Server Error", response = ApiErrorResponse.class)}
     )
-    @PutMapping("/{ocppTagPk}")
+    @PutMapping("/{ocppTagId}")
     @ResponseBody
-    public OcppTag.Overview update(@PathVariable("ocppTagPk") Integer ocppTagPk, @RequestBody @Valid OcppTagForm params) {
-        params.setOcppTagPk(ocppTagPk); // the one from incoming params does not matter
+    public OcppTag.Overview update(@PathVariable("ocppTagId") String ocppTagId, @RequestBody @Valid OcppTagForm params) {
+        params.setIdTag(ocppTagId); // the one from incoming params does not matter
         log.debug("Update request: {}", params);
 
-        ocppTagService.updateOcppTag(params);
+        if (params.getBalance() >= 0) {
+            ocppTagService.updateOcppTag(params);
+        }
 
-        var response = getOneInternal(ocppTagPk);
+        var response = getOneInternal(ocppTagId);
         log.debug("Update response: {}", response);
         return response;
     }
@@ -137,21 +142,21 @@ public class OcppTagsRestController {
         @ApiResponse(code = 404, message = "Not Found", response = ApiErrorResponse.class),
         @ApiResponse(code = 500, message = "Internal Server Error", response = ApiErrorResponse.class)}
     )
-    @DeleteMapping("/{ocppTagPk}")
+    @DeleteMapping("/{ocppTagId}")
     @ResponseBody
-    public OcppTag.Overview delete(@PathVariable("ocppTagPk") Integer ocppTagPk) {
-        log.debug("Delete request for ocppTagPk: {}", ocppTagPk);
+    public OcppTag.Overview delete(@PathVariable("ocppTagId") String ocppTagId) {
+        log.debug("Delete request for ocppTagPk: {}", ocppTagId);
 
-        var response = getOneInternal(ocppTagPk);
-        ocppTagService.deleteOcppTag(ocppTagPk);
+        var response = getOneInternal(ocppTagId);
+        ocppTagService.deleteOcppTag(response.getOcppTagPk());
 
         log.debug("Delete response: {}", response);
         return response;
     }
 
-    private OcppTag.Overview getOneInternal(int ocppTagPk) {
+    private OcppTag.Overview getOneInternal(String ocppTagId) {
         OcppTagQueryForm.ForApi params = new OcppTagQueryForm.ForApi();
-        params.setOcppTagPk(ocppTagPk);
+        params.setIdTag(ocppTagId);
 
         List<OcppTag.Overview> results = ocppTagService.getOverview(params);
         if (results.isEmpty()) {

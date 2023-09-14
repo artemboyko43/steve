@@ -430,6 +430,7 @@ public class OcppServerRepositoryImpl implements OcppServerRepository {
     }
 
     private void batchInsertMeterValues(DSLContext ctx, List<MeterValue> list, int connectorPk, Integer transactionId) {
+        // @todo artem check meter value.
         List<ConnectorMeterValueRecord> batch =
                 list.stream()
                     .flatMap(t -> t.getSampledValue()

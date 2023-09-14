@@ -1,0 +1,2 @@
+ALTER TABLE `ocpp_tag`
+  ADD balance INT NOT NULL DEFAULT(0)
