@@ -106,7 +106,7 @@ public class OcppTagsRestController {
     public OcppTag.Overview create(@RequestBody @Valid OcppTagForm params) {
         log.debug("Create request: {}", params);
 
-//        int ocppTagPk = ocppTagService.addOcppTag(params);
+        int ocppTagPk = ocppTagService.addOcppTag(params);
 
         var response = getOneInternal(params.getIdTag());
         log.debug("Create response: {}", response);
@@ -163,5 +163,31 @@ public class OcppTagsRestController {
             throw new SteveException.NotFound("Could not find this ocppTag");
         }
         return results.get(0);
+    }
+
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK"),
+            @ApiResponse(code = 400, message = "Bad Request", response = ApiErrorResponse.class),
+            @ApiResponse(code = 401, message = "Unauthorized", response = ApiErrorResponse.class),
+            @ApiResponse(code = 404, message = "Not Found", response = ApiErrorResponse.class),
+            @ApiResponse(code = 500, message = "Internal Server Error", response = ApiErrorResponse.class)}
+    )
+    @PutMapping("/{ocppTagId}/increaseBalance")
+    @ResponseBody
+    public OcppTag.Overview increase_balance(@PathVariable("ocppTagId") String ocppTagId, @RequestBody @Valid OcppTagForm params) {
+        params.setIdTag(ocppTagId); // the one from incoming params does not matter
+        log.debug("Update request: {}", params);
+
+        if (params.getBalance() > 0) {
+            var response = getOneInternal(ocppTagId);
+            double balance = response.getBalance();
+            params.setBalance(balance + (double) params.getBalance());
+
+            ocppTagService.updateOcppTag(params);
+        }
+
+        var response = getOneInternal(ocppTagId);
+        log.debug("Update response: {}", response);
+        return response;
     }
 }
