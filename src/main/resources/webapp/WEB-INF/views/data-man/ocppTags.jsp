@@ -105,13 +105,13 @@
                     </form:select>
                     </td>
                 </tr>
-                <tr>
+                <!-- <tr>
                     <td>Balance</td>
                     <td><form:select path="balance">
                         <form:options items="${balance}" itemLabel="value"/>
                     </form:select>
                     </td>
-                </tr>
+                </tr> -->
                 <tr>
                     <td></td>
                     <td id="add_space">
