@@ -186,6 +186,8 @@ public class CentralSystemService16_Service {
                 ocppTagService.decreaseBalanceOcppTag(ocppIdTag, differenceValue);
             }
             else {
+                ocppTagService.decreaseBalanceOcppTag(ocppIdTag, differenceValue);
+
                 // 3. Stop Transaction by OcppClient by Remote Stop transaction task.
                 RemoteStopTransactionParams remoteStopTransactionParams = new RemoteStopTransactionParams();
                 remoteStopTransactionParams.setTransactionId(parameters.getTransactionId());

@@ -19,6 +19,7 @@
 package de.rwth.idsg.steve.web.api;
 
 import de.rwth.idsg.steve.ocpp.OcppTransport;
+import de.rwth.idsg.steve.repository.OcppTagRepository;
 import de.rwth.idsg.steve.repository.TransactionRepository;
 import de.rwth.idsg.steve.repository.dto.ChargePointSelect;
 import de.rwth.idsg.steve.service.CentralSystemService16_Service;
@@ -49,6 +50,8 @@ import java.util.List;
 public class TransactionStartRestController {
 
     private final TransactionRepository transactionRepository;
+
+    private final OcppTagRepository ocppTagRepository;
 
 //    private final CentralSystemService16_Service centralSystemService16Service;
 
@@ -94,9 +97,13 @@ public class TransactionStartRestController {
                 params.getConnectorId()
         );
 
+        double idTagBalance = ocppTagRepository.getBalance(params.getIdTag());
+
         // Check if transaction already exist and active.
         // @todo check balance by ocpp tag.
-        if (activeTransactions.isEmpty()) {
+        if (activeTransactions.isEmpty() && idTagBalance > 20.0) {        
+        // if (activeTransactions.isEmpty()) {
+
 
             // @todo need to check do we need this "unlock connector".
             // centralSystemService16Service.
