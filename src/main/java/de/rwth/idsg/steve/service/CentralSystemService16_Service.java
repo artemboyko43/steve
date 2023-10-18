@@ -25,6 +25,7 @@ import de.rwth.idsg.steve.repository.OcppTagRepository;
 import de.rwth.idsg.steve.repository.SettingsRepository;
 import de.rwth.idsg.steve.repository.TransactionRepository;
 import de.rwth.idsg.steve.repository.dto.*;
+import de.rwth.idsg.steve.repository.dto.TransactionDetails.MeterValues;
 import de.rwth.idsg.steve.service.notification.OccpStationBooted;
 import de.rwth.idsg.steve.service.notification.OcppStationStatusFailure;
 import de.rwth.idsg.steve.service.notification.OcppTransactionEnded;
@@ -169,37 +170,77 @@ public class CentralSystemService16_Service {
         var transactionMeterValues = transactionDetail.getValues();
         // Logic for stopping transaction by balance
         // 1. Get Different in prev and current MeterValue from Energy.Active.Import.Register type Measurand.
-        if (transactionMeterValues.size() > 1) {
+        if (transactionMeterValues.size() >= 8) {
             String ocppIdTag = transactionDetail.getTransaction().getOcppIdTag();
 
-            float currentValue = Float.parseFloat(
-                transactionMeterValues.get(transactionMeterValues.size() - 1).getValue());
+            int meterValueSize = transactionMeterValues.size();
+            float currentValue = 0;
+            boolean foundCurrentValue = false;
+            boolean foundPreviousValue = false;
+            float previousValue = 0;
+            String nameMeasure = "Energy.Active.Import.Register";
 
-            float previousValue = Float.parseFloat(
-                transactionMeterValues.get(transactionMeterValues.size() - 2).getValue());
+            for (int i = meterValueSize - 1; i >= 0; i--) {
+                log.info("i=debug");
+                log.info(Integer.toString(i));
 
-            float differenceValue = currentValue - previousValue;
-            double idTagBalance = ocppTagService.getBalance(ocppIdTag);
+                if (foundCurrentValue == true && foundPreviousValue == false && transactionMeterValues.get(i).getMeasurand().equals(nameMeasure)) {
+                    previousValue = Float.parseFloat(transactionMeterValues.get(i).getValue());
+                    foundPreviousValue = true;
+                }
+                if (foundCurrentValue == false && transactionMeterValues.get(i).getMeasurand().equals(nameMeasure)) {
+                    currentValue = Float.parseFloat(transactionMeterValues.get(i).getValue());
+                    foundCurrentValue = true;
+                }
 
-            if (differenceValue < idTagBalance) {
-                // 2. Update OcppTag decrease balance of Kwt.
-                ocppTagService.decreaseBalanceOcppTag(ocppIdTag, differenceValue);
+                if (foundCurrentValue == true && foundPreviousValue == true) {
+                    break;
+                }
             }
-            else {
-                ocppTagService.decreaseBalanceOcppTag(ocppIdTag, differenceValue);
 
-                // 3. Stop Transaction by OcppClient by Remote Stop transaction task.
-                RemoteStopTransactionParams remoteStopTransactionParams = new RemoteStopTransactionParams();
-                remoteStopTransactionParams.setTransactionId(parameters.getTransactionId());
+            // float currentValue = Float.parseFloat(
+            //     transactionMeterValues.get(transactionMeterValues.size() - 1).getValue());
 
-                List<ChargePointSelect> chargePointSelectList = new ArrayList<>();
-                ChargePointSelect chargePointSelectListItem = new ChargePointSelect(OcppTransport.fromValue("J"), chargeBoxIdentity);
-                chargePointSelectList.add(chargePointSelectListItem);
+            log.info("currentValue after loop");
+            log.info(Float.toString(currentValue));
 
-                remoteStopTransactionParams.setChargePointSelectList(chargePointSelectList);
+            log.info("previousValue after loop");
+            log.info(Float.toString(previousValue));
 
-                // Stop transaction by charge point client.
-                chargePointService16Client.remoteStopTransaction(remoteStopTransactionParams);
+            // float previousValue = Float.parseFloat(
+            //     transactionMeterValues.get(transactionMeterValues.size() - 2).getValue());
+
+            log.info("transactionMeterValues.get(transactionMeterValues.size() - 2).getMeasurand()");
+            log.info(transactionMeterValues.get(transactionMeterValues.size() - 2).getMeasurand().toString());
+
+            if (foundCurrentValue == true && foundPreviousValue == true) {
+                float differenceValue = currentValue - previousValue;
+
+                log.info("different value =");
+                log.info(Float.toString(differenceValue));
+
+                double idTagBalance = ocppTagService.getBalance(ocppIdTag);
+
+                if (differenceValue < idTagBalance) {
+                    // 2. Update OcppTag decrease balance of Kwt.
+                    ocppTagService.decreaseBalanceOcppTag(ocppIdTag, differenceValue);
+                }
+                else {
+                    ocppTagService.decreaseBalanceOcppTag(ocppIdTag, differenceValue);
+
+                    // 3. Stop Transaction by OcppClient by Remote Stop transaction task.
+                    RemoteStopTransactionParams remoteStopTransactionParams = new RemoteStopTransactionParams();
+                    remoteStopTransactionParams.setTransactionId(parameters.getTransactionId());
+
+                    List<ChargePointSelect> chargePointSelectList = new ArrayList<>();
+                    ChargePointSelect chargePointSelectListItem = new ChargePointSelect(OcppTransport.fromValue("J"), chargeBoxIdentity);
+                    chargePointSelectList.add(chargePointSelectListItem);
+
+                    remoteStopTransactionParams.setChargePointSelectList(chargePointSelectList);
+
+                    // Stop transaction by charge point client.
+                    chargePointService16Client.remoteStopTransaction(remoteStopTransactionParams);
+                }
             }
         }
 

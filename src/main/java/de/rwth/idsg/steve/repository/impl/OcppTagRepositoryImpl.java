@@ -248,19 +248,22 @@ public class OcppTagRepositoryImpl implements OcppTagRepository {
         try {
             double balance = getBalance(idTag);
 
-            double newBalance = balance - diffBalance;
+            if (diffBalance > 0) {
+                double newBalance = balance - diffBalance;
 
-            if (diffBalance < balance) {
-                ctx.update(OCPP_TAG)
-                    .set(OCPP_TAG.BALANCE, newBalance)
-                    .where(OCPP_TAG.ID_TAG.equal(idTag))
-                    .execute();
-            }
-            else if (diffBalance >= balance) {
-                ctx.update(OCPP_TAG)
-                    .set(OCPP_TAG.BALANCE, 0.0)
-                    .where(OCPP_TAG.ID_TAG.equal(idTag))
-                    .execute();
+                if (diffBalance < balance) {
+                    ctx.update(OCPP_TAG)
+                        .set(OCPP_TAG.BALANCE, newBalance)
+                        .where(OCPP_TAG.ID_TAG.equal(idTag))
+                        .execute();
+                }
+                else if (diffBalance >= balance) {
+                    ctx.update(OCPP_TAG)
+                        .set(OCPP_TAG.BALANCE, 0.0)
+                        .where(OCPP_TAG.ID_TAG.equal(idTag))
+                        .execute();
+                }
+
             }
             
         } catch (DataAccessException e) {
