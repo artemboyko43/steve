@@ -56,14 +56,14 @@ public class TransactionsRestController {
     )
     @GetMapping(value = "")
     @ResponseBody
-    public List<Transaction> get(@Valid TransactionQueryForm.ForApi params) {
+    public List get(@Valid TransactionQueryForm.ForApi params) {
         log.debug("Read request for query: {}", params);
 
         if (params.isReturnCSV()) {
             throw new BadRequestException("returnCSV=true is not supported for API calls");
         }
 
-        var response = transactionRepository.getTransactions(params);
+        var response = transactionRepository.apiGetTransactions(params);
         log.debug("Read response for query: {}", response);
         return response;
     }

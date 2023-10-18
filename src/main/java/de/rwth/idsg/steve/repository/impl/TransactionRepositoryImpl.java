@@ -27,11 +27,15 @@ import de.rwth.idsg.steve.web.dto.TransactionQueryForm;
 import jooq.steve.db.enums.TransactionStopEventActor;
 import jooq.steve.db.tables.records.ConnectorMeterValueRecord;
 import jooq.steve.db.tables.records.TransactionStartRecord;
+import org.jetbrains.annotations.NotNull;
+import java.sql.Timestamp;
+
 import org.joda.time.DateTime;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record12;
+import org.jooq.Record13;
 import org.jooq.Record9;
 import org.jooq.RecordMapper;
 import org.jooq.SelectQuery;
@@ -50,6 +54,8 @@ import static jooq.steve.db.tables.ConnectorMeterValue.CONNECTOR_METER_VALUE;
 import static jooq.steve.db.tables.OcppTag.OCPP_TAG;
 import static jooq.steve.db.tables.Transaction.TRANSACTION;
 import static jooq.steve.db.tables.TransactionStart.TRANSACTION_START;
+import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.table;
 
 /**
  * @author Sevket Goekay <sevketgokay@gmail.com>
@@ -69,6 +75,11 @@ public class TransactionRepositoryImpl implements TransactionRepository {
     public List<Transaction> getTransactions(TransactionQueryForm form) {
         return getInternal(form).fetch()
                                 .map(new TransactionMapper());
+    }
+
+    @Override
+    public List apiGetTransactions(TransactionQueryForm form) {
+        return apiGetInternal(form).fetch().map(new ApiTransactionMapper());
     }
 
     @Override
@@ -297,6 +308,49 @@ public class TransactionRepositoryImpl implements TransactionRepository {
         return addConditions(selectQuery, form);
     }
 
+    /**
+     * Difference from getInternalCSV:
+     * Joins with CHARGE_BOX and OCPP_TAG tables, selects CHARGE_BOX_PK and OCPP_TAG_PK additionally
+     */
+    @SuppressWarnings("unchecked")
+    private
+    SelectQuery<Record13<Integer, String, Integer, String, DateTime, String, DateTime, String, String, Integer, Integer, TransactionStopEventActor, String>>
+    apiGetInternal(TransactionQueryForm form) {
+
+        Field<?> maxValue = DSL.max(CONNECTOR_METER_VALUE.VALUE).as("MaxValue");
+        Table<?> tm = table(select(CONNECTOR_METER_VALUE.TRANSACTION_PK, maxValue)
+                .from(CONNECTOR_METER_VALUE)
+                .where(CONNECTOR_METER_VALUE.MEASURAND.eq("Energy.Active.Import.Register"))
+                .groupBy(CONNECTOR_METER_VALUE.TRANSACTION_PK)
+//                .orderBy(CONNECTOR_METER_VALUE.VALUE.desc())
+        ).as("tm");
+
+        SelectQuery selectQuery = ctx.selectQuery();
+        selectQuery.addFrom(TRANSACTION);
+        selectQuery.addJoin(CONNECTOR, TRANSACTION.CONNECTOR_PK.eq(CONNECTOR.CONNECTOR_PK));
+        selectQuery.addJoin(CHARGE_BOX, CHARGE_BOX.CHARGE_BOX_ID.eq(CONNECTOR.CHARGE_BOX_ID));
+        selectQuery.addJoin(OCPP_TAG, OCPP_TAG.ID_TAG.eq(TRANSACTION.ID_TAG));
+        selectQuery.addJoin(tm, tm.field(CONNECTOR_METER_VALUE.TRANSACTION_PK).eq(TRANSACTION.TRANSACTION_PK));
+
+        selectQuery.addSelect(
+                TRANSACTION.TRANSACTION_PK,
+                CONNECTOR.CHARGE_BOX_ID,
+                CONNECTOR.CONNECTOR_ID,
+                TRANSACTION.ID_TAG,
+                TRANSACTION.START_TIMESTAMP,
+                TRANSACTION.START_VALUE,
+                TRANSACTION.STOP_TIMESTAMP,
+                TRANSACTION.STOP_VALUE,
+                TRANSACTION.STOP_REASON,
+                CHARGE_BOX.CHARGE_BOX_PK,
+                OCPP_TAG.OCPP_TAG_PK,
+                TRANSACTION.STOP_EVENT_ACTOR,
+                tm.field(maxValue)
+        );
+
+        return addConditions(selectQuery, form);
+    }
+
     @SuppressWarnings("unchecked")
     private SelectQuery addConditions(SelectQuery selectQuery, TransactionQueryForm form) {
         if (form.isTransactionPkSet()) {
@@ -376,6 +430,28 @@ public class TransactionRepositoryImpl implements TransactionRepository {
                               .ocppTagPk(r.value11())
                               .stopEventActor(r.value12())
                               .build();
+        }
+    }
+
+    private static class ApiTransactionMapper implements RecordMapper<Record13<Integer, String, Integer, String, DateTime, String, DateTime, String, String, Integer, Integer, TransactionStopEventActor, String>, Transaction> {
+        @Override
+        public Transaction map(Record13<Integer, String, Integer, String, DateTime, String, DateTime, String, String, Integer, Integer, TransactionStopEventActor, String> r) {
+            return Transaction.builder()
+                    .id(r.value1())
+                    .chargeBoxId(r.value2())
+                    .connectorId(r.value3())
+                    .ocppIdTag(r.value4())
+                    .startTimestamp(r.value5())
+                    .startTimestampFormatted(DateTimeUtils.humanize(r.value5()))
+                    .startValue(r.value13())
+                    .stopTimestamp(r.value7())
+                    .stopTimestampFormatted(DateTimeUtils.humanize(r.value7()))
+                    .stopValue(r.value8())
+                    .stopReason(r.value9())
+                    .chargeBoxPk(r.value10())
+                    .ocppTagPk(r.value11())
+                    .stopEventActor(r.value12())
+                    .build();
         }
     }
 }

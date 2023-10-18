@@ -32,6 +32,8 @@ import java.util.List;
 public interface TransactionRepository {
     List<Transaction> getTransactions(TransactionQueryForm form);
 
+    List<Transaction> apiGetTransactions(TransactionQueryForm form);
+
     void writeTransactionsCSV(TransactionQueryForm form, Writer writer);
 
     List<Integer> getActiveTransactionIds(String chargeBoxId);
