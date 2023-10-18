@@ -31,6 +31,18 @@
 			</c:if>
 		</td>
 	</tr>
+    <tr>
+        <td><b>Connector Prices</b></td>
+    </tr>
+    <tr>
+        <td>Connector 1 Price:</td><td><form:input path="connector1Price" /></td>
+    </tr>
+    <tr>
+        <td>Connector 2 Price:</td><td><form:input path="connector2Price" /></td>
+    </tr>
+    <tr>
+        <td>Connector 3 Price:</td><td><form:input path="connector3Price" /></td>
+    </tr>
 	<tr><td>Latitude:</td><td><form:input path="locationLatitude"/></td></tr>
 	<tr><td>Longitude:</td><td><form:input path="locationLongitude"/></td></tr>
 

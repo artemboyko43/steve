@@ -341,7 +341,11 @@ public class ChargePointRepositoryImpl implements ChargePointRepository {
         return ctx.select(
                 CHARGE_BOX.CHARGE_BOX_ID, 
                 CHARGE_BOX.LOCATION_LATITUDE, 
-                CHARGE_BOX.LOCATION_LONGITUDE
+                CHARGE_BOX.LOCATION_LONGITUDE,
+                CHARGE_BOX.DESCRIPTION,
+                CHARGE_BOX.CONNECTOR_1_PRICE,
+                CHARGE_BOX.CONNECTOR_2_PRICE,
+                CHARGE_BOX.CONNECTOR_3_PRICE
             )
             .from(CHARGE_BOX)
             .fetch()
@@ -381,16 +385,19 @@ public class ChargePointRepositoryImpl implements ChargePointRepository {
 
     private void updateChargePointInternal(DSLContext ctx, ChargePointForm form, Integer addressPk) {
         ctx.update(CHARGE_BOX)
-           .set(CHARGE_BOX.DESCRIPTION, form.getDescription())
-           .set(CHARGE_BOX.LOCATION_LATITUDE, form.getLocationLatitude())
-           .set(CHARGE_BOX.LOCATION_LONGITUDE, form.getLocationLongitude())
-           .set(CHARGE_BOX.INSERT_CONNECTOR_STATUS_AFTER_TRANSACTION_MSG, form.getInsertConnectorStatusAfterTransactionMsg())
-           .set(CHARGE_BOX.REGISTRATION_STATUS, form.getRegistrationStatus())
-           .set(CHARGE_BOX.NOTE, form.getNote())
-           .set(CHARGE_BOX.ADMIN_ADDRESS, form.getAdminAddress())
-           .set(CHARGE_BOX.ADDRESS_PK, addressPk)
-           .where(CHARGE_BOX.CHARGE_BOX_PK.equal(form.getChargeBoxPk()))
-           .execute();
+            .set(CHARGE_BOX.DESCRIPTION, form.getDescription())
+            .set(CHARGE_BOX.LOCATION_LATITUDE, form.getLocationLatitude())
+            .set(CHARGE_BOX.LOCATION_LONGITUDE, form.getLocationLongitude())
+            .set(CHARGE_BOX.INSERT_CONNECTOR_STATUS_AFTER_TRANSACTION_MSG, form.getInsertConnectorStatusAfterTransactionMsg())
+            .set(CHARGE_BOX.REGISTRATION_STATUS, form.getRegistrationStatus())
+            .set(CHARGE_BOX.NOTE, form.getNote())
+            .set(CHARGE_BOX.ADMIN_ADDRESS, form.getAdminAddress())
+            .set(CHARGE_BOX.ADDRESS_PK, addressPk)
+            .set(CHARGE_BOX.CONNECTOR_1_PRICE, form.getConnector1Price())
+            .set(CHARGE_BOX.CONNECTOR_2_PRICE, form.getConnector2Price())
+            .set(CHARGE_BOX.CONNECTOR_3_PRICE, form.getConnector3Price())
+            .where(CHARGE_BOX.CHARGE_BOX_PK.equal(form.getChargeBoxPk()))
+            .execute();
     }
 
     private void deleteChargePointInternal(DSLContext ctx, int chargeBoxPk) {
