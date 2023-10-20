@@ -54,8 +54,7 @@ import static jooq.steve.db.tables.ConnectorMeterValue.CONNECTOR_METER_VALUE;
 import static jooq.steve.db.tables.OcppTag.OCPP_TAG;
 import static jooq.steve.db.tables.Transaction.TRANSACTION;
 import static jooq.steve.db.tables.TransactionStart.TRANSACTION_START;
-import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.table;
+import static org.jooq.impl.DSL.*;
 
 /**
  * @author Sevket Goekay <sevketgokay@gmail.com>
@@ -317,12 +316,12 @@ public class TransactionRepositoryImpl implements TransactionRepository {
     SelectQuery<Record13<Integer, String, Integer, String, DateTime, String, DateTime, String, String, Integer, Integer, TransactionStopEventActor, String>>
     apiGetInternal(TransactionQueryForm form) {
 
-        Field<?> maxValue = DSL.max(CONNECTOR_METER_VALUE.VALUE).as("MaxValue");
+        Field<Double> castedField = DSL.cast(CONNECTOR_METER_VALUE.VALUE, Double.class);
+        Field<?> maxValue = DSL.max(castedField).as("MaxValue");
         Table<?> tm = table(select(CONNECTOR_METER_VALUE.TRANSACTION_PK, maxValue)
-                .from(CONNECTOR_METER_VALUE)
-                .where(CONNECTOR_METER_VALUE.MEASURAND.eq("Energy.Active.Import.Register"))
-                .groupBy(CONNECTOR_METER_VALUE.TRANSACTION_PK)
-//                .orderBy(CONNECTOR_METER_VALUE.VALUE.desc())
+            .from(CONNECTOR_METER_VALUE)
+            .where(CONNECTOR_METER_VALUE.MEASURAND.eq("Energy.Active.Import.Register"))
+            .groupBy(CONNECTOR_METER_VALUE.TRANSACTION_PK)
         ).as("tm");
 
         SelectQuery selectQuery = ctx.selectQuery();
@@ -443,7 +442,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
                     .ocppIdTag(r.value4())
                     .startTimestamp(r.value5())
                     .startTimestampFormatted(DateTimeUtils.humanize(r.value5()))
-                    .startValue(r.value13())
+                    .startValue(String.valueOf(r.value13()))
                     .stopTimestamp(r.value7())
                     .stopTimestampFormatted(DateTimeUtils.humanize(r.value7()))
                     .stopValue(r.value8())

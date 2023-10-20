@@ -26,6 +26,7 @@ import de.rwth.idsg.steve.web.dto.ChargePointForm;
 import de.rwth.idsg.steve.web.dto.ChargePointQueryForm;
 import de.rwth.idsg.steve.web.dto.ConnectorStatusForm;
 import org.jetbrains.annotations.Nullable;
+import org.jooq.Record3;
 
 import java.util.Collections;
 import java.util.List;
@@ -64,4 +65,6 @@ public interface ChargePointRepository {
     int addChargePoint(ChargePointForm form);
     void updateChargePoint(ChargePointForm form);
     void deleteChargePoint(int chargeBoxPk);
+
+    Record3<Double, Double, Double> getChargePointPrices(String charge_box_id);
 }

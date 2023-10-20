@@ -34,16 +34,7 @@ import jooq.steve.db.tables.records.ChargeBoxRecord;
 import lombok.extern.slf4j.Slf4j;
 import ocpp.cs._2015._10.RegistrationStatus;
 import org.joda.time.DateTime;
-import org.jooq.Condition;
-import org.jooq.DSLContext;
-import org.jooq.Field;
-import org.jooq.JSONFormat;
-import org.jooq.Record1;
-import org.jooq.Record5;
-import org.jooq.Result;
-import org.jooq.SelectConditionStep;
-import org.jooq.SelectQuery;
-import org.jooq.Table;
+import org.jooq.*;
 import org.jooq.JSONFormat.RecordFormat;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
@@ -404,5 +395,11 @@ public class ChargePointRepositoryImpl implements ChargePointRepository {
         ctx.delete(CHARGE_BOX)
            .where(CHARGE_BOX.CHARGE_BOX_PK.equal(chargeBoxPk))
            .execute();
+    }
+
+    public Record3<Double, Double, Double> getChargePointPrices(String charge_box_id) {
+        return ctx.select(CHARGE_BOX.CONNECTOR_1_PRICE, CHARGE_BOX.CONNECTOR_2_PRICE, CHARGE_BOX.CONNECTOR_3_PRICE)
+                .from(CHARGE_BOX)
+                .where(CHARGE_BOX.CHARGE_BOX_ID.eq(charge_box_id)).fetchSingle();
     }
 }

@@ -36,7 +36,7 @@
 			<td><form:select path="parentIdTag" items="${idTagList}"/></td>
 		</tr>
 		<tr><td>Expiry Date/Time:</td><td><form:input path="expiryDate" cssClass="dateTimePicker"/></td></tr>
-		<tr><td>Balance Wh: </td><td><form:input type="number" path="balance" placeholder="0"/></td></tr>
+		<tr><td>Balance (UAH): </td><td><form:input type="number" path="balance" placeholder="0"/></td></tr>
 		<tr><td>Max. Active Transaction Count: test</td><td><form:input path="maxActiveTransactionCount" placeholder="if empty, 1 will be assumed"/></td></tr>
 		<tr><td><i>
 			Set to <b>0</b> to block this tag. Set to a <b>negative</b> value to disable concurrent transaction checks

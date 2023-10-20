@@ -128,7 +128,7 @@
                 <th data-sort="string">Parent ID Tag</th>
                 <th data-sort="date">Expiry Date/Time</th>
                 <th data-sort="string">In Transaction?</th>
-                <th data-sort="string">Balance Wh</th>
+                <th data-sort="string">Balance UAH</th>
                 <th>
                     <form:form action="${ctxPath}/manager/ocppTags/add" method="get">
                         <input type="submit" class="blueSubmit" value="Add New"/>
