@@ -46,6 +46,15 @@ public final class Transaction {
 
     private final String ocppIdTag;
 
+    @Nullable
+    private final double connector1Price;
+
+    @Nullable
+    private final double connector2Price;
+
+    @Nullable
+    private final double connector3Price;
+
     /**
      * Only relevant for the web pages. Disabled for API
      */

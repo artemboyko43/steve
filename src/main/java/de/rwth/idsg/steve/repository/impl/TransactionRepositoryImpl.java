@@ -36,6 +36,7 @@ import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record12;
 import org.jooq.Record13;
+import org.jooq.Record16;
 import org.jooq.Record9;
 import org.jooq.RecordMapper;
 import org.jooq.SelectQuery;
@@ -313,7 +314,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
      */
     @SuppressWarnings("unchecked")
     private
-    SelectQuery<Record13<Integer, String, Integer, String, DateTime, String, DateTime, String, String, Integer, Integer, TransactionStopEventActor, String>>
+    SelectQuery<Record16<Integer, String, Integer, String, DateTime, String, DateTime, String, String, Integer, Integer, TransactionStopEventActor, String, Double, Double, Double>>
     apiGetInternal(TransactionQueryForm form) {
 
         Field<Double> castedField = DSL.cast(CONNECTOR_METER_VALUE.VALUE, Double.class);
@@ -344,7 +345,10 @@ public class TransactionRepositoryImpl implements TransactionRepository {
                 CHARGE_BOX.CHARGE_BOX_PK,
                 OCPP_TAG.OCPP_TAG_PK,
                 TRANSACTION.STOP_EVENT_ACTOR,
-                tm.field(maxValue)
+                tm.field(maxValue),
+                CHARGE_BOX.CONNECTOR_1_PRICE,
+                CHARGE_BOX.CONNECTOR_2_PRICE,
+                CHARGE_BOX.CONNECTOR_3_PRICE
         );
 
         return addConditions(selectQuery, form);
@@ -432,9 +436,9 @@ public class TransactionRepositoryImpl implements TransactionRepository {
         }
     }
 
-    private static class ApiTransactionMapper implements RecordMapper<Record13<Integer, String, Integer, String, DateTime, String, DateTime, String, String, Integer, Integer, TransactionStopEventActor, String>, Transaction> {
+    private static class ApiTransactionMapper implements RecordMapper<Record16<Integer, String, Integer, String, DateTime, String, DateTime, String, String, Integer, Integer, TransactionStopEventActor, String, Double, Double, Double>, Transaction> {
         @Override
-        public Transaction map(Record13<Integer, String, Integer, String, DateTime, String, DateTime, String, String, Integer, Integer, TransactionStopEventActor, String> r) {
+        public Transaction map(Record16<Integer, String, Integer, String, DateTime, String, DateTime, String, String, Integer, Integer, TransactionStopEventActor, String, Double, Double, Double> r) {
             return Transaction.builder()
                     .id(r.value1())
                     .chargeBoxId(r.value2())
@@ -450,6 +454,9 @@ public class TransactionRepositoryImpl implements TransactionRepository {
                     .chargeBoxPk(r.value10())
                     .ocppTagPk(r.value11())
                     .stopEventActor(r.value12())
+                    .connector1Price(r.value14())
+                    .connector2Price(r.value15())
+                    .connector3Price(r.value16())
                     .build();
         }
     }
