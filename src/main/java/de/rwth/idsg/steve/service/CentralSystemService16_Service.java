@@ -222,7 +222,7 @@ public class CentralSystemService16_Service {
                 connectorPrice = connectorPriceSource.floatValue();
 
                 if (connectorPrice > 0) {
-                    float differenceValue = (currentValue - previousValue) * connectorPrice;
+                    float differenceValue = (currentValue - previousValue) / 1000 * connectorPrice;
 
                     log.info("different value =");
                     log.info(Float.toString(differenceValue));
