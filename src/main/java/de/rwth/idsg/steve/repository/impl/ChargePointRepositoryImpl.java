@@ -402,4 +402,11 @@ public class ChargePointRepositoryImpl implements ChargePointRepository {
                 .from(CHARGE_BOX)
                 .where(CHARGE_BOX.CHARGE_BOX_ID.eq(charge_box_id)).fetchSingle();
     }
+
+    public DateTime getChargeBoxLastHeartBeat(String charge_box_id) {
+        return ctx.select(CHARGE_BOX.LAST_HEARTBEAT_TIMESTAMP)
+            .from(CHARGE_BOX)
+            .where(CHARGE_BOX.CHARGE_BOX_ID.eq(charge_box_id))
+            .fetchOne(CHARGE_BOX.LAST_HEARTBEAT_TIMESTAMP);
+    }
 }

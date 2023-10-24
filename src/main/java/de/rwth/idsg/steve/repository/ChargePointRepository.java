@@ -26,6 +26,8 @@ import de.rwth.idsg.steve.web.dto.ChargePointForm;
 import de.rwth.idsg.steve.web.dto.ChargePointQueryForm;
 import de.rwth.idsg.steve.web.dto.ConnectorStatusForm;
 import org.jetbrains.annotations.Nullable;
+import org.joda.time.DateTime;
+import org.jooq.Record1;
 import org.jooq.Record3;
 
 import java.util.Collections;
@@ -67,4 +69,6 @@ public interface ChargePointRepository {
     void deleteChargePoint(int chargeBoxPk);
 
     Record3<Double, Double, Double> getChargePointPrices(String charge_box_id);
+
+    DateTime getChargeBoxLastHeartBeat(String charge_box_id);
 }
