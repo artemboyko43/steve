@@ -236,7 +236,7 @@ public class CentralSystemService16_Service {
                         ocppTagService.decreaseBalanceOcppTag(ocppIdTag, differenceValue);
 
                         Map<String, Object> dataTransaction = new HashMap<>();
-                        dataTransaction.put("alreadyCharged", currentValue);
+                        dataTransaction.put("alreadyCharged", Float.toString(currentValue));
                         dataTransaction.put("idTag", ocppIdTag);
                         dataTransaction.put("connectorId", connectorId);
                         dataTransaction.put("chargeBoxId", chargeBoxIdentity);
