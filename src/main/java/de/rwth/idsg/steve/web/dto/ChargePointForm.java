@@ -48,11 +48,14 @@ public class ChargePointForm {
     @NotBlank(message = "Registration status is required")
     private String registrationStatus;
 
-    private Double connector1Price;
+    @Range(min = 0)
+    private Double connector1Price = .0;
 
-    private Double connector2Price;
+    @Range(min = 0)
+    private Double connector2Price = .0;
 
-    private Double connector3Price;
+    @Range(min = 0)
+    private Double connector3Price = .0;
 
     @NotNull
     private Boolean insertConnectorStatusAfterTransactionMsg;

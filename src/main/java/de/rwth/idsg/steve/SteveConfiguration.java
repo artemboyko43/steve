@@ -60,6 +60,7 @@ public enum SteveConfiguration {
     private final WebApi webApi;
     private final DB db;
     private final Jetty jetty;
+    private final Firebase firebase;
 
     SteveConfiguration() {
         PropertiesFileLoader p = new PropertiesFileLoader("main.properties");
@@ -79,6 +80,11 @@ public enum SteveConfiguration {
                      .keyStorePath(p.getOptionalString("keystore.path"))
                      .keyStorePassword(p.getOptionalString("keystore.password"))
                      .build();
+
+        firebase = Firebase.builder()
+                .nodeName(p.getString("firebase.node_name"))
+                .databaseUrl(p.getString("firebase.database_url"))
+                .build();
 
         db = DB.builder()
                .ip(p.getString("db.ip"))
@@ -194,6 +200,12 @@ public enum SteveConfiguration {
     public static class WebApi {
         private final String headerKey;
         private final String headerValue;
+    }
+
+    @Builder @Getter
+    public static class Firebase {
+        private final String databaseUrl;
+        private final String nodeName;
     }
 
     // OCPP-related configuration

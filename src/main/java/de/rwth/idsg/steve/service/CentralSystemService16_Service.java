@@ -62,9 +62,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author Sevket Goekay <sevketgokay@gmail.com>
@@ -77,6 +77,8 @@ public class CentralSystemService16_Service {
     @Autowired private OcppServerRepository ocppServerRepository;
     @Autowired private SettingsRepository settingsRepository;
     @Autowired private TransactionRepository transactionRepository;
+
+    @Autowired private FirebaseService firebaseService;
 
     @Autowired private ChargePointRepository chargePointRepository;
 
@@ -158,7 +160,7 @@ public class CentralSystemService16_Service {
         return new StatusNotificationResponse();
     }
 
-    public MeterValuesResponse meterValues(MeterValuesRequest parameters, String chargeBoxIdentity) {
+    public MeterValuesResponse meterValues(MeterValuesRequest parameters, String chargeBoxIdentity) throws ExecutionException, InterruptedException, TimeoutException {
         ocppServerRepository.insertMeterValues(
                 chargeBoxIdentity,
                 parameters.getMeterValue(),
@@ -232,6 +234,16 @@ public class CentralSystemService16_Service {
                     if (differenceValue < idTagBalance) {
                         // 2. Update OcppTag decrease balance of Kwt.
                         ocppTagService.decreaseBalanceOcppTag(ocppIdTag, differenceValue);
+
+                        Map<String, Object> dataTransaction = new HashMap<>();
+                        dataTransaction.put("alreadyCharged", currentValue);
+                        dataTransaction.put("idTag", ocppIdTag);
+                        dataTransaction.put("connectorId", connectorId);
+                        dataTransaction.put("chargeBoxId", chargeBoxIdentity);
+
+                        String idActiveTransaction = chargeBoxIdentity + "_" + connectorId;
+                        // Write to firebase.
+                        firebaseService.writeToActiveTransaction(idActiveTransaction, dataTransaction);
                     } else {
                         ocppTagService.decreaseBalanceOcppTag(ocppIdTag, differenceValue);
 
