@@ -52,7 +52,9 @@ import javax.xml.ws.BindingType;
 import javax.xml.ws.Response;
 import javax.xml.ws.soap.Addressing;
 import javax.xml.ws.soap.SOAPBinding;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author Sevket Goekay <sevketgokay@gmail.com>
@@ -98,7 +100,15 @@ public class CentralSystemService16_SoapServer implements CentralSystemService {
 
     @Override
     public MeterValuesResponse meterValues(MeterValuesRequest parameters, String chargeBoxIdentity) {
-        return service.meterValues(parameters, chargeBoxIdentity);
+        try {
+            return service.meterValues(parameters, chargeBoxIdentity);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (TimeoutException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

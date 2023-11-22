@@ -54,7 +54,9 @@ import javax.xml.ws.BindingType;
 import javax.xml.ws.Response;
 import javax.xml.ws.soap.Addressing;
 import javax.xml.ws.soap.SOAPBinding;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Service implementation of OCPP V1.5
@@ -107,7 +109,17 @@ public class CentralSystemService15_SoapServer implements CentralSystemService {
 
     public MeterValuesResponse meterValues(MeterValuesRequest parameters, String chargeBoxIdentity) {
         return Convert.start(parameters, Server15to16Impl.SINGLETON::convertRequest)
-                      .andThen(req -> service.meterValues(req, chargeBoxIdentity))
+                      .andThen(req -> {
+                          try {
+                              return service.meterValues(req, chargeBoxIdentity);
+                          } catch (ExecutionException e) {
+                              throw new RuntimeException(e);
+                          } catch (InterruptedException e) {
+                              throw new RuntimeException(e);
+                          } catch (TimeoutException e) {
+                              throw new RuntimeException(e);
+                          }
+                      })
                       .andThen(Server15to16Impl.SINGLETON::convertResponse)
                       .apply(parameters);
     }
