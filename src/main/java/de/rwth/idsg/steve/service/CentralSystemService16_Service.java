@@ -244,8 +244,10 @@ public class CentralSystemService16_Service {
                         String idActiveTransaction = chargeBoxIdentity + "_" + connectorId;
                         // Write to firebase.
                         firebaseService.writeToActiveTransaction(idActiveTransaction, dataTransaction);
+                        firebaseService.updateBalance(ocppIdTag, differenceValue);
                     } else {
                         ocppTagService.decreaseBalanceOcppTag(ocppIdTag, differenceValue);
+                        firebaseService.updateBalance(ocppIdTag, 0);
 
                         // 3. Stop Transaction by OcppClient by Remote Stop transaction task.
                         RemoteStopTransactionParams remoteStopTransactionParams = new RemoteStopTransactionParams();

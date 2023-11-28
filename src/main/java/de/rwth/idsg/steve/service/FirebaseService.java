@@ -1,6 +1,12 @@
 package de.rwth.idsg.steve.service;
 
 
+import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.DocumentSnapshot;
+import com.google.cloud.firestore.FieldValue;
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.QuerySnapshot;
+import com.google.firebase.cloud.FirestoreClient;
 import de.rwth.idsg.steve.SteveConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +19,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import javax.annotation.PostConstruct;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -22,6 +29,8 @@ import static de.rwth.idsg.steve.SteveConfiguration.CONFIG;
 @Service
 public class FirebaseService {
     private FirebaseDatabase firebaseDatabase;
+
+    private Firestore firestore;
 
     @PostConstruct
     public void initialize() {
@@ -39,6 +48,7 @@ public class FirebaseService {
             }
 
             firebaseDatabase = FirebaseDatabase.getInstance();
+            firestore = FirestoreClient.getFirestore();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -52,5 +62,21 @@ public class FirebaseService {
             .child("active_transactions")
             .child(IdActiveTransaction)
             .setValueAsync(activeTransactionData);
+    }
+
+    public void updateBalance(String ocppTagId, float updateBalanceValue) throws ExecutionException, InterruptedException {
+        ApiFuture<QuerySnapshot> querySnapshot = firestore
+                .collection("users_data")
+                .whereEqualTo("ocppTagId", ocppTagId)
+                .get();
+
+        for (DocumentSnapshot document : querySnapshot.get().getDocuments()) {
+            if (updateBalanceValue != 0) {
+                document.getReference().update("balance", FieldValue.increment(-updateBalanceValue));
+            }
+            else {
+                document.getReference().update("balance", updateBalanceValue);
+            }
+        }
     }
 }
