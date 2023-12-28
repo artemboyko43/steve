@@ -48,6 +48,7 @@ public final class ChargePointDetailsMapper {
         form.setConnector1Price(chargeBox.getConnector_1Price());
         form.setConnector2Price(chargeBox.getConnector_2Price());
         form.setConnector3Price(chargeBox.getConnector_3Price());
+        form.setConnector4Price(chargeBox.getConnector_4Price());
 
         return form;
     }

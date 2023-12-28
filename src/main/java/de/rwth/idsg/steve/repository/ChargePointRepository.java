@@ -29,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
 import org.jooq.Record1;
 import org.jooq.Record3;
+import org.jooq.Record4;
 
 import java.util.Collections;
 import java.util.List;
@@ -68,7 +69,7 @@ public interface ChargePointRepository {
     void updateChargePoint(ChargePointForm form);
     void deleteChargePoint(int chargeBoxPk);
 
-    Record3<Double, Double, Double> getChargePointPrices(String charge_box_id);
+    Record4<Double, Double, Double, Double> getChargePointPrices(String charge_box_id);
 
     DateTime getChargeBoxLastHeartBeat(String charge_box_id);
 }

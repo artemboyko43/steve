@@ -336,7 +336,8 @@ public class ChargePointRepositoryImpl implements ChargePointRepository {
                 CHARGE_BOX.DESCRIPTION,
                 CHARGE_BOX.CONNECTOR_1_PRICE,
                 CHARGE_BOX.CONNECTOR_2_PRICE,
-                CHARGE_BOX.CONNECTOR_3_PRICE
+                CHARGE_BOX.CONNECTOR_3_PRICE,
+                CHARGE_BOX.CONNECTOR_4_PRICE
             )
             .from(CHARGE_BOX)
             .fetch()
@@ -387,6 +388,7 @@ public class ChargePointRepositoryImpl implements ChargePointRepository {
             .set(CHARGE_BOX.CONNECTOR_1_PRICE, form.getConnector1Price())
             .set(CHARGE_BOX.CONNECTOR_2_PRICE, form.getConnector2Price())
             .set(CHARGE_BOX.CONNECTOR_3_PRICE, form.getConnector3Price())
+            .set(CHARGE_BOX.CONNECTOR_4_PRICE, form.getConnector4Price())
             .where(CHARGE_BOX.CHARGE_BOX_PK.equal(form.getChargeBoxPk()))
             .execute();
     }
@@ -397,8 +399,8 @@ public class ChargePointRepositoryImpl implements ChargePointRepository {
            .execute();
     }
 
-    public Record3<Double, Double, Double> getChargePointPrices(String charge_box_id) {
-        return ctx.select(CHARGE_BOX.CONNECTOR_1_PRICE, CHARGE_BOX.CONNECTOR_2_PRICE, CHARGE_BOX.CONNECTOR_3_PRICE)
+    public Record4<Double, Double, Double, Double> getChargePointPrices(String charge_box_id) {
+        return ctx.select(CHARGE_BOX.CONNECTOR_1_PRICE, CHARGE_BOX.CONNECTOR_2_PRICE, CHARGE_BOX.CONNECTOR_3_PRICE, CHARGE_BOX.CONNECTOR_4_PRICE)
                 .from(CHARGE_BOX)
                 .where(CHARGE_BOX.CHARGE_BOX_ID.eq(charge_box_id)).fetchSingle();
     }

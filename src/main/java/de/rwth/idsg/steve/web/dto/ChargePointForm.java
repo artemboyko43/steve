@@ -57,6 +57,9 @@ public class ChargePointForm {
     @Range(min = 0)
     private Double connector3Price = .0;
 
+    @Range(min = 0)
+    private Double connector4Price = .0;
+
     @NotNull
     private Boolean insertConnectorStatusAfterTransactionMsg;
 

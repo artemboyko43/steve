@@ -55,6 +55,9 @@ public final class Transaction {
     @Nullable
     private final double connector3Price;
 
+    @Nullable
+    private final double connector4Price;
+
     /**
      * Only relevant for the web pages. Disabled for API
      */
