@@ -43,6 +43,9 @@
     <tr>
         <td>Connector 3 Price:</td><td><form:input path="connector3Price" /></td>
     </tr>
+    <tr>
+        <td>Connector 4 Price:</td><td><form:input path="connector4Price" /></td>
+    </tr>
 	<tr><td>Latitude:</td><td><form:input path="locationLatitude"/></td></tr>
 	<tr><td>Longitude:</td><td><form:input path="locationLongitude"/></td></tr>
 
