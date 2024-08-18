@@ -23,9 +23,11 @@ import de.rwth.idsg.steve.repository.ChargePointRepository;
 import de.rwth.idsg.steve.repository.OcppTagRepository;
 import de.rwth.idsg.steve.repository.TransactionRepository;
 import de.rwth.idsg.steve.repository.dto.ChargePointSelect;
+import de.rwth.idsg.steve.repository.dto.ConnectorStatus;
 import de.rwth.idsg.steve.service.CentralSystemService16_Service;
 import de.rwth.idsg.steve.service.ChargePointService16_Client;
 import de.rwth.idsg.steve.web.api.ApiControllerAdvice.ApiErrorResponse;
+import de.rwth.idsg.steve.web.dto.ConnectorStatusForm;
 import de.rwth.idsg.steve.web.dto.RemoteStartTransaction;
 import de.rwth.idsg.steve.web.dto.ocpp.RemoteStartTransactionParams;
 import io.swagger.annotations.ApiResponse;
@@ -43,6 +45,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Sevket Goekay <sevketgokay@gmail.com>
@@ -117,15 +120,25 @@ public class TransactionStartRestController {
             return -2;
         }
 
+        // We are looking to connector status. It should be in status Preparing for starting charging.
+        // -3 Error means that connector is not connected to car or other error.
+        ConnectorStatusForm connectorStatusForm = new ConnectorStatusForm();
+        connectorStatusForm.setChargeBoxId(params.getChargeBoxId());
+        List<ConnectorStatus> connectorsStatuses = chargePointRepository.getChargePointConnectorStatus(connectorStatusForm);
+        boolean connectorStatusPreparing = false;
+        for (ConnectorStatus connectorStatus : connectorsStatuses) {
+            if (connectorStatus.getConnectorId() == params.getConnectorId() && Objects.equals(connectorStatus.getStatus(), "Preparing")) {
+                connectorStatusPreparing = true;
+                break;
+            }
+        }
+        if (!connectorStatusPreparing) {
+            return -3;
+        }
+
         // Check if transaction already exist and active.
         // @todo check balance by ocpp tag.
         if (activeTransactions.isEmpty() && idTagBalance > 20.0) {
-        // if (activeTransactions.isEmpty()) {
-
-
-            // @todo need to check do we need this "unlock connector".
-            // centralSystemService16Service.
-
             RemoteStartTransactionParams remoteStartTransactionParams = new RemoteStartTransactionParams();
             remoteStartTransactionParams.setConnectorId(params.getConnectorId());
             remoteStartTransactionParams.setIdTag(params.getIdTag());
