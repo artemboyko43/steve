@@ -132,9 +132,11 @@ public class TransactionStartRestController {
                 break;
             }
         }
-        if (!connectorStatusPreparing) {
-            return -3;
-        }
+        // if (params.getChargeBoxId() != "test_chargebox") {
+            // if (!connectorStatusPreparing) {
+                // return -3;
+            // }
+        // }
 
         // Check if transaction already exist and active.
         // @todo check balance by ocpp tag.

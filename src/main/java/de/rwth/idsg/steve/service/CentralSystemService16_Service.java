@@ -182,11 +182,40 @@ public class CentralSystemService16_Service {
             boolean foundCurrentValue = false;
             boolean foundPreviousValue = false;
             float previousValue = 0;
+            // Name of measure for getting kWt charged.
             String nameMeasure = "Energy.Active.Import.Register";
+            // Measure for getting percetage progress of charging battery.
+            String percentageMeasure = "SoC";
+            // Measure for getting power in kWt.
+            String powerMeasure = "Power.Active.Import";          
+            String idActiveTransaction = chargeBoxIdentity + "_" + connectorId;
+
+
+            if (transactionMeterValues.get(meterValueSize - 1).getMeasurand().equals(percentageMeasure)) {
+                Map<String, Object> percentageMeasureDataTransaction = new HashMap<>();
+                percentageMeasureDataTransaction.put("percentage", Float.parseFloat(transactionMeterValues.get(meterValueSize - 1).getValue()));
+                firebaseService.writeToActiveTransaction(idActiveTransaction, percentageMeasureDataTransaction);
+            }
+            if (transactionMeterValues.get(meterValueSize - 1).getMeasurand().equals(powerMeasure)) {
+                Map<String, Object> powerMeasureDataTransaction = new HashMap<>();
+                powerMeasureDataTransaction.put("power", Float.parseFloat(transactionMeterValues.get(meterValueSize - 1).getValue()));
+                firebaseService.writeToActiveTransaction(idActiveTransaction, powerMeasureDataTransaction);
+            } 
+            if (transactionMeterValues.get(meterValueSize - 1).getMeasurand().equals(powerMeasure) ||
+                transactionMeterValues.get(meterValueSize - 1).getMeasurand().equals(percentageMeasure) ||
+                transactionMeterValues.get(meterValueSize - 1).getMeasurand().equals(nameMeasure)
+            ) {
+                Map<String, Object> percentageMeasureDataTransaction = new HashMap<>();
+                percentageMeasureDataTransaction.put("lastMeterTime", transactionMeterValues.get(meterValueSize - 1).getValueTimestamp().toString());
+                firebaseService.writeToActiveTransaction(
+                    idActiveTransaction, 
+                    percentageMeasureDataTransaction
+                );
+            }
 
             for (int i = meterValueSize - 1; i >= 0; i--) {
-                log.info("i=debug");
-                log.info(Integer.toString(i));
+                // log.info("i=debug");
+                // log.info(Integer.toString(i));  
 
                 if (foundCurrentValue == true && foundPreviousValue == false && transactionMeterValues.get(i).getMeasurand().equals(nameMeasure)) {
                     previousValue = Float.parseFloat(transactionMeterValues.get(i).getValue());
@@ -241,7 +270,6 @@ public class CentralSystemService16_Service {
                         dataTransaction.put("connectorId", connectorId);
                         dataTransaction.put("chargeBoxId", chargeBoxIdentity);
 
-                        String idActiveTransaction = chargeBoxIdentity + "_" + connectorId;
                         // Write to firebase.
                         firebaseService.writeToActiveTransaction(idActiveTransaction, dataTransaction);
                         firebaseService.updateBalance(ocppIdTag, differenceValue);

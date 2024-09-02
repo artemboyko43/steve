@@ -2,12 +2,13 @@ package de.rwth.idsg.steve.service;
 
 
 import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.cloud.firestore.FieldValue;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.QuerySnapshot;
+import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
 import de.rwth.idsg.steve.SteveConfiguration;
+import de.rwth.idsg.steve.repository.TransactionRepository;
+import de.rwth.idsg.steve.repository.dto.InsertTransactionParams;
+import de.rwth.idsg.steve.repository.dto.TransactionDetails;
+import de.rwth.idsg.steve.repository.dto.UpdateTransactionParams;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import javax.annotation.PostConstruct;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -28,6 +30,9 @@ import static de.rwth.idsg.steve.SteveConfiguration.CONFIG;
 @Slf4j
 @Service
 public class FirebaseService {
+
+    @Autowired private TransactionRepository transactionRepository;
+
     private FirebaseDatabase firebaseDatabase;
 
     private Firestore firestore;
@@ -61,7 +66,9 @@ public class FirebaseService {
         reference
             .child("active_transactions")
             .child(IdActiveTransaction)
-            .setValueAsync(activeTransactionData);
+            .updateChildrenAsync(activeTransactionData);
+
+            // .set(activeTransactionData, SetOptions.merge());
     }
 
     public void updateBalance(String ocppTagId, float updateBalanceValue) throws ExecutionException, InterruptedException {
@@ -78,5 +85,68 @@ public class FirebaseService {
                 document.getReference().update("balance", updateBalanceValue);
             }
         }
+    }
+
+    // public void updateData(String ocppTagId, String key, String value) {
+    //         ApiFuture<QuerySnapshot> querySnapshot = firestore
+    //             .collection("users_data")
+    //             .whereEqualTo("ocppTagId", ocppTagId)
+    //             .get();
+            
+    //     for (DocumentSnapshot document : querySnapshot.get().getDocuments()) {
+    //         document.getReference().update(key,
+    //     }
+    // }
+
+    public void startTransaction(InsertTransactionParams params) {
+        Map<String, Object> transactionData = new HashMap<>();
+        transactionData.put("chargeBoxId", params.getChargeBoxId());
+        transactionData.put("idTag", params.getIdTag());
+        transactionData.put("connectorId", params.getConnectorId());
+        transactionData.put("transactionStart", params.getStartTimestamp().toString());
+
+        ApiFuture<WriteResult> future = firestore
+            .collection("active_transactions")
+            .document(
+                params.getIdTag() + "_" +
+                params.getChargeBoxId() + "_" +
+                params.getConnectorId()
+            )
+            .set(transactionData);
+
+        DatabaseReference reference = firebaseDatabase.getReference();
+        reference
+            .child("active_transactions")
+            .child(
+                params.getChargeBoxId() + "_" +
+                params.getConnectorId()
+            )
+            .setValueAsync(transactionData);
+
+        System.out.println("Firestore startTransaction event");
+    }
+
+    public void endTransaction(UpdateTransactionParams params) {
+        TransactionDetails transactionDetails = transactionRepository.getDetails(params.getTransactionId());
+
+        firestore
+            .collection("active_transactions")
+            .document(
+                transactionDetails.getTransaction().getOcppIdTag() + "_" +
+                params.getChargeBoxId() + "_" +
+                transactionDetails.getTransaction().getConnectorId()
+            )
+            .delete();
+
+        DatabaseReference reference = firebaseDatabase.getReference();
+        reference
+            .child("active_transactions")
+            .child(
+                params.getChargeBoxId() + "_" +
+                transactionDetails.getTransaction().getConnectorId()
+            )
+            .setValueAsync(null);
+
+        System.out.println("Firestore endTransaction event");
     }
 }

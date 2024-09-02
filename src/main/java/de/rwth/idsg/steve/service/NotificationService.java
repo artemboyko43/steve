@@ -53,6 +53,8 @@ public class NotificationService {
 
     @Autowired private MailService mailService;
 
+    @Autowired private FirebaseService firebaseService;
+
     @EventListener
     public void ocppStationBooted(OccpStationBooted notification) {
         if (isDisabled(OcppStationBooted)) {
@@ -106,23 +108,29 @@ public class NotificationService {
 
     @EventListener
     public void ocppTransactionStarted(OcppTransactionStarted notification) {
-        if (isDisabled(OcppTransactionStarted)) {
-            return;
-        }
+        // if (isDisabled(OcppTransactionStarted)) {
+        //     return;
+        // }
 
         String subject = format("Transaction '%s' has started on charging station '%s' on connector '%s'", notification.getTransactionId(), notification.getParams().getChargeBoxId(), notification.getParams().getConnectorId());
 
+        if (notification.getTransactionId() > 0) {
+            firebaseService.startTransaction(notification.getParams());
+        }
         mailService.sendAsync(subject, addTimestamp(createContent(notification.getParams())));
     }
 
     @EventListener
     public void ocppTransactionEnded(OcppTransactionEnded notification) {
-       if (isDisabled(OcppTransactionEnded)) {
-            return;
-        }
+//       if (isDisabled(OcppTransactionEnded)) {
+//            return;
+//        }
 
         String subject = format("Transaction '%s' has ended on charging station '%s'", notification.getParams().getTransactionId(), notification.getParams().getChargeBoxId());
 
+        if (notification.getParams().getTransactionId() > 0) {
+            firebaseService.endTransaction(notification.getParams());
+        }
         mailService.sendAsync(subject, addTimestamp(createContent(notification.getParams())));
     }
 
