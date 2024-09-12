@@ -32,7 +32,7 @@
 		</td>
 	</tr>
     <tr>
-        <td><b>Connector Prices</b></td>
+        <td><b>Connector Prices </b></td>
     </tr>
     <tr>
         <td>Connector 1 Price:</td><td><form:input path="connector1Price" /></td>

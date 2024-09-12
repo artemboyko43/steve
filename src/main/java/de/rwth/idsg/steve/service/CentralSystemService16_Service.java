@@ -189,29 +189,9 @@ public class CentralSystemService16_Service {
             // Measure for getting power in kWt.
             String powerMeasure = "Power.Active.Import";          
             String idActiveTransaction = chargeBoxIdentity + "_" + connectorId;
+            Map<String, Object> meterValuesData = new HashMap<>();
 
-
-            if (transactionMeterValues.get(meterValueSize - 1).getMeasurand().equals(percentageMeasure)) {
-                Map<String, Object> percentageMeasureDataTransaction = new HashMap<>();
-                percentageMeasureDataTransaction.put("percentage", Float.parseFloat(transactionMeterValues.get(meterValueSize - 1).getValue()));
-                firebaseService.writeToActiveTransaction(idActiveTransaction, percentageMeasureDataTransaction);
-            }
-            if (transactionMeterValues.get(meterValueSize - 1).getMeasurand().equals(powerMeasure)) {
-                Map<String, Object> powerMeasureDataTransaction = new HashMap<>();
-                powerMeasureDataTransaction.put("power", Float.parseFloat(transactionMeterValues.get(meterValueSize - 1).getValue()));
-                firebaseService.writeToActiveTransaction(idActiveTransaction, powerMeasureDataTransaction);
-            } 
-            if (transactionMeterValues.get(meterValueSize - 1).getMeasurand().equals(powerMeasure) ||
-                transactionMeterValues.get(meterValueSize - 1).getMeasurand().equals(percentageMeasure) ||
-                transactionMeterValues.get(meterValueSize - 1).getMeasurand().equals(nameMeasure)
-            ) {
-                Map<String, Object> percentageMeasureDataTransaction = new HashMap<>();
-                percentageMeasureDataTransaction.put("lastMeterTime", transactionMeterValues.get(meterValueSize - 1).getValueTimestamp().toString());
-                firebaseService.writeToActiveTransaction(
-                    idActiveTransaction, 
-                    percentageMeasureDataTransaction
-                );
-            }
+            meterValuesData.put("lastMeterTime", transactionMeterValues.get(meterValueSize - 1).getValueTimestamp().toString());
 
             for (int i = meterValueSize - 1; i >= 0; i--) {
                 // log.info("i=debug");
@@ -226,10 +206,33 @@ public class CentralSystemService16_Service {
                     foundCurrentValue = true;
                 }
 
+                // Power and Percentage measure.
+                if (transactionMeterValues
+                        .get(i)
+                        .getMeasurand()
+                        .equals(percentageMeasure)) 
+                {
+                    meterValuesData.put("percentage", transactionMeterValues
+                        .get(i)
+                        .getValue()
+                    );
+                }
+                if (transactionMeterValues
+                        .get(i)
+                        .getMeasurand()
+                        .equals(powerMeasure)) {
+                    meterValuesData.put("power", transactionMeterValues
+                        .get(i)
+                        .getValue() 
+                    );
+                }
+
                 if (foundCurrentValue == true && foundPreviousValue == true) {
                     break;
                 }
             }
+
+            firebaseService.writeToActiveTransaction(idActiveTransaction, meterValuesData);
 
             // float currentValue = Float.parseFloat(
             //     transactionMeterValues.get(transactionMeterValues.size() - 1).getValue());
@@ -272,7 +275,7 @@ public class CentralSystemService16_Service {
 
                         // Write to firebase.
                         firebaseService.writeToActiveTransaction(idActiveTransaction, dataTransaction);
-                        firebaseService.updateBalance(ocppIdTag, differenceValue);
+                        firebaseService.updateBalance(ocppIdTag, ocppTagService.getBalance(ocppIdTag));
                     } else {
                         ocppTagService.decreaseBalanceOcppTag(ocppIdTag, differenceValue);
                         firebaseService.updateBalance(ocppIdTag, 0);

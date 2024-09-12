@@ -116,9 +116,10 @@ public class TransactionStartRestController {
         if (chageBoxLastHeartBeat == null) {
             return -1;
         }
-        if (new Duration(chageBoxLastHeartBeat, new DateTime()).getStandardHours() > 2) {
-            return -2;
-        }
+        // Need to check more.
+        // if (new Duration(chageBoxLastHeartBeat, new DateTime()).getStandardHours() > 2) {
+            // return -2;
+        // }
 
         // We are looking to connector status. It should be in status Preparing for starting charging.
         // -3 Error means that connector is not connected to car or other error.
@@ -133,9 +134,9 @@ public class TransactionStartRestController {
             }
         }
         // if (params.getChargeBoxId() != "test_chargebox") {
-            // if (!connectorStatusPreparing) {
-                // return -3;
-            // }
+            if (!connectorStatusPreparing) {
+                return -3;
+            }
         // }
 
         // Check if transaction already exist and active.

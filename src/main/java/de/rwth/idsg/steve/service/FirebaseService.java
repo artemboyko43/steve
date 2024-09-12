@@ -71,19 +71,14 @@ public class FirebaseService {
             // .set(activeTransactionData, SetOptions.merge());
     }
 
-    public void updateBalance(String ocppTagId, float updateBalanceValue) throws ExecutionException, InterruptedException {
+    public void updateBalance(String ocppTagId, double updateBalanceValue) throws ExecutionException, InterruptedException {
         ApiFuture<QuerySnapshot> querySnapshot = firestore
                 .collection("users_data")
                 .whereEqualTo("ocppTagId", ocppTagId)
                 .get();
 
         for (DocumentSnapshot document : querySnapshot.get().getDocuments()) {
-            if (updateBalanceValue != 0) {
-                document.getReference().update("balance", FieldValue.increment(-updateBalanceValue));
-            }
-            else {
-                document.getReference().update("balance", updateBalanceValue);
-            }
+            document.getReference().update("balance", updateBalanceValue);
         }
     }
 
