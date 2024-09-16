@@ -134,9 +134,9 @@ public class TransactionStartRestController {
             }
         }
         // if (params.getChargeBoxId() != "test_chargebox") {
-            // if (!connectorStatusPreparing) {
-                // return -3;
-            // }
+            if (!connectorStatusPreparing) {
+                return -3;
+            }
         // }
 
         // Check if transaction already exist and active.

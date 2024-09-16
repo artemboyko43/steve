@@ -168,130 +168,132 @@ public class CentralSystemService16_Service {
                 parameters.getTransactionId()
         );
 
-        TransactionDetails transactionDetail = transactionRepository.getDetails(parameters.getTransactionId());
-        var transactionMeterValues = transactionDetail.getValues();
-        // Logic for stopping transaction by balance
-        // 1. Get Different in prev and current MeterValue from Energy.Active.Import.Register type Measurand.
-        if (transactionMeterValues.size() > 0) {
-            String ocppIdTag = transactionDetail.getTransaction().getOcppIdTag();
-            int connectorId = (int) transactionDetail.getTransaction().getConnectorId();
+        if (parameters.getTransactionId() != null) {
+            TransactionDetails transactionDetail = transactionRepository.getDetails(parameters.getTransactionId());
+            var transactionMeterValues = transactionDetail.getValues();
+            // Logic for stopping transaction by balance
+            // 1. Get Different in prev and current MeterValue from Energy.Active.Import.Register type Measurand.
+            if (transactionMeterValues.size() > 0) {
+                String ocppIdTag = transactionDetail.getTransaction().getOcppIdTag();
+                int connectorId = (int) transactionDetail.getTransaction().getConnectorId();
 
-            int meterValueSize = transactionMeterValues.size();
-            float currentValue = 0;
-            float connectorPrice = 0;
-            boolean foundCurrentValue = false;
-            boolean foundPreviousValue = false;
-            float previousValue = 0;
-            // Name of measure for getting kWt charged.
-            String nameMeasure = "Energy.Active.Import.Register";
-            // Measure for getting percetage progress of charging battery.
-            String percentageMeasure = "SoC";
-            // Measure for getting power in kWt.
-            String powerMeasure = "Power.Active.Import";          
-            String idActiveTransaction = chargeBoxIdentity + "_" + connectorId;
-            Map<String, Object> meterValuesData = new HashMap<>();
+                int meterValueSize = transactionMeterValues.size();
+                float currentValue = 0;
+                float connectorPrice = 0;
+                boolean foundCurrentValue = false;
+                boolean foundPreviousValue = false;
+                float previousValue = 0;
+                // Name of measure for getting kWt charged.
+                String nameMeasure = "Energy.Active.Import.Register";
+                // Measure for getting percetage progress of charging battery.
+                String percentageMeasure = "SoC";
+                // Measure for getting power in kWt.
+                String powerMeasure = "Power.Active.Import";          
+                String idActiveTransaction = chargeBoxIdentity + "_" + connectorId;
+                Map<String, Object> meterValuesData = new HashMap<>();
 
-            meterValuesData.put("lastMeterTime", transactionMeterValues.get(meterValueSize - 1).getValueTimestamp().toString());
+                meterValuesData.put("lastMeterTime", transactionMeterValues.get(meterValueSize - 1).getValueTimestamp().toString());
 
-            for (int i = meterValueSize - 1; i >= 0; i--) {
-                // log.info("i=debug");
-                // log.info(Integer.toString(i));  
+                for (int i = meterValueSize - 1; i >= 0; i--) {
+                    // log.info("i=debug");
+                    // log.info(Integer.toString(i));  
 
-                if (foundCurrentValue == true && foundPreviousValue == false && transactionMeterValues.get(i).getMeasurand().equals(nameMeasure)) {
-                    previousValue = Float.parseFloat(transactionMeterValues.get(i).getValue());
-                    foundPreviousValue = true;
+                    if (foundCurrentValue == true && foundPreviousValue == false && transactionMeterValues.get(i).getMeasurand().equals(nameMeasure)) {
+                        previousValue = Float.parseFloat(transactionMeterValues.get(i).getValue());
+                        foundPreviousValue = true;
+                    }
+                    if (foundCurrentValue == false && transactionMeterValues.get(i).getMeasurand().equals(nameMeasure)) {
+                        currentValue = Float.parseFloat(transactionMeterValues.get(i).getValue());
+                        foundCurrentValue = true;
+                    }
+
+                    // Power and Percentage measure.
+                    if (transactionMeterValues
+                            .get(i)
+                            .getMeasurand()
+                            .equals(percentageMeasure)) 
+                    {
+                        meterValuesData.put("percentage", transactionMeterValues
+                            .get(i)
+                            .getValue()
+                        );
+                    }
+                    if (transactionMeterValues
+                            .get(i)
+                            .getMeasurand()
+                            .equals(powerMeasure)) {
+                        meterValuesData.put("power", transactionMeterValues
+                            .get(i)
+                            .getValue() 
+                        );
+                    }
+
+                    if (foundCurrentValue == true && foundPreviousValue == true) {
+                        break;
+                    }
                 }
-                if (foundCurrentValue == false && transactionMeterValues.get(i).getMeasurand().equals(nameMeasure)) {
-                    currentValue = Float.parseFloat(transactionMeterValues.get(i).getValue());
-                    foundCurrentValue = true;
-                }
 
-                // Power and Percentage measure.
-                if (transactionMeterValues
-                        .get(i)
-                        .getMeasurand()
-                        .equals(percentageMeasure)) 
-                {
-                    meterValuesData.put("percentage", transactionMeterValues
-                        .get(i)
-                        .getValue()
-                    );
-                }
-                if (transactionMeterValues
-                        .get(i)
-                        .getMeasurand()
-                        .equals(powerMeasure)) {
-                    meterValuesData.put("power", transactionMeterValues
-                        .get(i)
-                        .getValue() 
-                    );
-                }
+                firebaseService.writeToActiveTransaction(idActiveTransaction, meterValuesData);
+
+                // float currentValue = Float.parseFloat(
+                //     transactionMeterValues.get(transactionMeterValues.size() - 1).getValue());
+
+                log.info("currentValue after loop");
+                log.info(Float.toString(currentValue));
+
+                log.info("previousValue after loop");
+                log.info(Float.toString(previousValue));
+
+                // float previousValue = Float.parseFloat(
+                //     transactionMeterValues.get(transactionMeterValues.size() - 2).getValue());
+
+    //            log.info("transactionMeterValues.get(transactionMeterValues.size() - 2).getMeasurand()");
+    //            log.info(transactionMeterValues.get(transactionMeterValues.size() - 2).getMeasurand().toString());
 
                 if (foundCurrentValue == true && foundPreviousValue == true) {
-                    break;
-                }
-            }
 
-            firebaseService.writeToActiveTransaction(idActiveTransaction, meterValuesData);
+                    Double connectorPriceSource = (Double) chargePointRepository.getChargePointPrices(chargeBoxIdentity)
+                            .get(connectorId - 1);
+                    connectorPrice = connectorPriceSource.floatValue();
 
-            // float currentValue = Float.parseFloat(
-            //     transactionMeterValues.get(transactionMeterValues.size() - 1).getValue());
+                    if (connectorPrice > 0) {
+                        float differenceValue = (currentValue - previousValue) / 1000 * connectorPrice;
 
-            log.info("currentValue after loop");
-            log.info(Float.toString(currentValue));
+                        log.info("different value =");
+                        log.info(Float.toString(differenceValue));
 
-            log.info("previousValue after loop");
-            log.info(Float.toString(previousValue));
+                        double idTagBalance = ocppTagService.getBalance(ocppIdTag);
 
-            // float previousValue = Float.parseFloat(
-            //     transactionMeterValues.get(transactionMeterValues.size() - 2).getValue());
+                        if (differenceValue < idTagBalance) {
+                            // 2. Update OcppTag decrease balance of Kwt.
+                            ocppTagService.decreaseBalanceOcppTag(ocppIdTag, differenceValue);
 
-//            log.info("transactionMeterValues.get(transactionMeterValues.size() - 2).getMeasurand()");
-//            log.info(transactionMeterValues.get(transactionMeterValues.size() - 2).getMeasurand().toString());
+                            Map<String, Object> dataTransaction = new HashMap<>();
+                            dataTransaction.put("alreadyCharged", Float.toString(currentValue));
+                            dataTransaction.put("idTag", ocppIdTag);
+                            dataTransaction.put("connectorId", connectorId);
+                            dataTransaction.put("chargeBoxId", chargeBoxIdentity);
 
-            if (foundCurrentValue == true && foundPreviousValue == true) {
+                            // Write to firebase.
+                            firebaseService.writeToActiveTransaction(idActiveTransaction, dataTransaction);
+                            firebaseService.updateBalance(ocppIdTag, ocppTagService.getBalance(ocppIdTag));
+                        } else {
+                            ocppTagService.decreaseBalanceOcppTag(ocppIdTag, differenceValue);
+                            firebaseService.updateBalance(ocppIdTag, 0);
 
-                Double connectorPriceSource = (Double) chargePointRepository.getChargePointPrices(chargeBoxIdentity)
-                        .get(connectorId - 1);
-                connectorPrice = connectorPriceSource.floatValue();
+                            // 3. Stop Transaction by OcppClient by Remote Stop transaction task.
+                            RemoteStopTransactionParams remoteStopTransactionParams = new RemoteStopTransactionParams();
+                            remoteStopTransactionParams.setTransactionId(parameters.getTransactionId());
 
-                if (connectorPrice > 0) {
-                    float differenceValue = (currentValue - previousValue) / 1000 * connectorPrice;
+                            List<ChargePointSelect> chargePointSelectList = new ArrayList<>();
+                            ChargePointSelect chargePointSelectListItem = new ChargePointSelect(OcppTransport.fromValue("J"), chargeBoxIdentity);
+                            chargePointSelectList.add(chargePointSelectListItem);
 
-                    log.info("different value =");
-                    log.info(Float.toString(differenceValue));
+                            remoteStopTransactionParams.setChargePointSelectList(chargePointSelectList);
 
-                    double idTagBalance = ocppTagService.getBalance(ocppIdTag);
-
-                    if (differenceValue < idTagBalance) {
-                        // 2. Update OcppTag decrease balance of Kwt.
-                        ocppTagService.decreaseBalanceOcppTag(ocppIdTag, differenceValue);
-
-                        Map<String, Object> dataTransaction = new HashMap<>();
-                        dataTransaction.put("alreadyCharged", Float.toString(currentValue));
-                        dataTransaction.put("idTag", ocppIdTag);
-                        dataTransaction.put("connectorId", connectorId);
-                        dataTransaction.put("chargeBoxId", chargeBoxIdentity);
-
-                        // Write to firebase.
-                        firebaseService.writeToActiveTransaction(idActiveTransaction, dataTransaction);
-                        firebaseService.updateBalance(ocppIdTag, ocppTagService.getBalance(ocppIdTag));
-                    } else {
-                        ocppTagService.decreaseBalanceOcppTag(ocppIdTag, differenceValue);
-                        firebaseService.updateBalance(ocppIdTag, 0);
-
-                        // 3. Stop Transaction by OcppClient by Remote Stop transaction task.
-                        RemoteStopTransactionParams remoteStopTransactionParams = new RemoteStopTransactionParams();
-                        remoteStopTransactionParams.setTransactionId(parameters.getTransactionId());
-
-                        List<ChargePointSelect> chargePointSelectList = new ArrayList<>();
-                        ChargePointSelect chargePointSelectListItem = new ChargePointSelect(OcppTransport.fromValue("J"), chargeBoxIdentity);
-                        chargePointSelectList.add(chargePointSelectListItem);
-
-                        remoteStopTransactionParams.setChargePointSelectList(chargePointSelectList);
-
-                        // Stop transaction by charge point client.
-                        chargePointService16Client.remoteStopTransaction(remoteStopTransactionParams);
+                            // Stop transaction by charge point client.
+                            chargePointService16Client.remoteStopTransaction(remoteStopTransactionParams);
+                        }
                     }
                 }
             }
